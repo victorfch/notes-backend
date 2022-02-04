@@ -3,26 +3,9 @@ const mongoose = require('mongoose')
 const connectionString = process.env.DB_URL
 
 mongoose.connect(connectionString)
-	.then(() => {
-		console.log('Database connected')
-	}).catch((err) => {
-		console.log(err)
-	})
+	.then(() => console.log('Database connected'))
+	.catch((err) => console.log(err))
 
-
-/*
-const note = new Note({
-	content: 'Aprendiendo Mongo',
-	date: new Date(),
-	important: true
+process.on('uncaughtException', () => {
+	mongoose.connection.disconnect()
 })
-
-note.save()
-	.then((result) => {
-		console.log(result)
-		mongoose.connection.close()
-	})
-	.catch(err => {
-		console.log(err)
-	})
-    */

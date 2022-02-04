@@ -5,6 +5,8 @@ const cors = require('cors')
 const app = express()
 
 const Note = require('./models/Note')
+const handleErrors = require('./middleware/handleErrors')
+const notFound = require('./middleware/notFound')
 
 app.use(cors())
 app.use(express.json())
@@ -13,7 +15,6 @@ app.use(express.json())
 const NOT_CONTENT = 204
 const BAD_REQUEST = 400
 const NOT_FOUND = 404
-const INTERNAL_SERVER_ERROR = 500
 
 app.get('/', (request, response) => {
 	response.send('<h1>Hello world</h1>')
@@ -39,9 +40,24 @@ app.get('/api/notes/:id', (request, response, next) => {
 
 app.delete('/api/notes/:id', (request, response, next) => {
 	const id = request.params.id
-	Note.findByIdAndRemove(id).then(() => {
-		response.status(NOT_CONTENT).end()
-	}).catch(error => next(error))
+
+	Note.findByIdAndRemove(id)
+		.then(() => response.status(NOT_CONTENT).end())
+		.catch(error => next(error))
+})
+
+app.put('/api/notes/:id', (request, response, next) => {
+	const id = request.params.id
+	const body = request.body
+
+	const newNote = {
+		content: body.content,
+		important: body.important
+	}
+
+	Note.findByIdAndUpdate(id, newNote, {new: true})
+		.then(result => response.json(result))
+		.catch(err => next(err))
 })
 
 app.post('/api/notes', (request, response) => {
@@ -57,21 +73,12 @@ app.post('/api/notes', (request, response) => {
 		date: new Date(),
 		important: body.important || false
 	})
-	newNote.save().then(savedNote => {
-		response.json(savedNote)
-	})
+	newNote.save()
+		.then(savedNote => response.json(savedNote))
 })
 
-app.use((error, request, response, next) => {
-	console.log(error.name)
-	if (error.name === 'CastError') {
-		response.status(BAD_REQUEST).send({
-			error: 'id used is malformed'
-		})
-	} else {
-		response.status(INTERNAL_SERVER_ERROR).end()
-	}
-})
+app.use(notFound)
+app.use(handleErrors)
 
 const PORT = process.env.PORT
 
