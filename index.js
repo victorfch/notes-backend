@@ -1,9 +1,13 @@
+require('./mongo')
 const express = require('express')
 const cors = require('cors')
 const app = express()
 
+//const Note = require('./models/Note')
+
 app.use(cors())
 app.use(express.json())
+
 
 let notes = [
 	{
@@ -74,7 +78,8 @@ app.post('/api/notes', (request, response) => {
 	response.json(newNote)
 })
 
-const PORT = 3000
+const PORT = process.env.PORT
+
 app.listen(PORT, () => {
 	console.log(`Server runnng in port ${PORT}`)
 })
